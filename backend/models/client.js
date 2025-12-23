@@ -9,7 +9,6 @@ const clientSchema = new Schema(
         phone: { type: String, trim: true, default: '' },
         address: { type: String, trim: true, default: '' },
         shoppingCart: {shoppingCart: [{ type: Types.ObjectId, ref: 'ShoppingCart' }], default: [] },
-
         isActive: { type: Boolean, default: true },
 
     },

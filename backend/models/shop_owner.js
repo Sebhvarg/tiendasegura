@@ -9,8 +9,10 @@ const shopOwnerSchema = new Schema(
         phone: { type: String, trim: true, default: '' },
         address: { type: String, trim: true, default: '' },
         isActive: { type: Boolean, default: true },
-        shops : [{ type: Types.ObjectId, ref: 'Shop' }],
+        shops : [{ type: Types.ObjectId, ref: 'Shop' }, { default: [] }],
         
     },
-    { timestamps: true }
+    { timestamps: true, collection: 'shop_owners' }
 );
+const ShopOwner = model('ShopOwner', shopOwnerSchema);
+module.exports = ShopOwner;

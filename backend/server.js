@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: __dirname + '/.env' });
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -17,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 // Rutas
 const databaseRoutes = require('./routes/database');
 const productRoutes = require('./routes/products');
+const shoppingCartRoutes = require('./routes/shoppingCart');
+
+app.use('/api/shopping-carts', shoppingCartRoutes);
 app.use('/api/', databaseRoutes);
 app.use('/api/products', productRoutes);
 

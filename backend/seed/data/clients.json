@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Carlos Pérez",
+    "email": "carlos.perez@example.com",
+    "phone": "+52 555-987-6543",
+    "address": "Calle Primavera 78, CDMX",
+    "isActive": true
+  },
+  {
+    "name": "Luisa Fernández",
+    "email": "luisa.fernandez@example.com",
+    "phone": "+52 555-222-3333",
+    "address": "Av. Juárez 99, Puebla",
+    "isActive": true
+  }
+]

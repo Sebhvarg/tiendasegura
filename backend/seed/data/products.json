@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Leche Entera 1L",
+    "description": "Leche de vaca entera, 1 litro",
+    "brand": "Lacteos MX",
+    "price": 1.25,
+    "stock": 100,
+    "imageUrl": null,
+    "isActive": true
+  },
+  {
+    "name": "Pan Integral",
+    "description": "Pan integral de 650g",
+    "brand": "Panaderia Sol",
+    "price": 2.10,
+    "stock": 50,
+    "imageUrl": null,
+    "isActive": true
+  },
+  {
+    "name": "Huevos (12 piezas)",
+    "description": "Docena de huevos frescos",
+    "brand": "Granja Norte",
+    "price": 3.40,
+    "stock": 200,
+    "imageUrl": null,
+    "isActive": true
+  }
+]

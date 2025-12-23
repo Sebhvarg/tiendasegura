@@ -5,9 +5,8 @@ const { Schema, model, Types } = mongoose;
 const listOfProductsSchema = new Schema(
     {
         products: [
-            { type: Types.ObjectId, ref: 'Product' }
+            { type: Types.ObjectId, ref: 'Product' }, { default: [] }
         ],
-        quantity: { type: Number, required: true, min: 1 },
         price: { type: Number, required: true, min: 0.05 },
         isActive: { type: Boolean, default: true },
 

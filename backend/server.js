@@ -14,6 +14,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Rutas
+const databaseRoutes = require('./routes/database');
+app.use('/api/', databaseRoutes);
+
 
 // Ruta de prueba
 app.get('/', (req, res) => {

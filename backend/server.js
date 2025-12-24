@@ -21,11 +21,14 @@ const shoppingCartRoutes = require('./routes/shoppingCart');
 const listRoutes = require('./routes/list');
 const catalogRoutes = require('./routes/catalog');
 const orderRoutes = require('./routes/order');
+const searchHistoryRoutes = require('./routes/searchHistory');
+
 
 app.use('/api/orders', orderRoutes);
 app.use('/api/catalogs', catalogRoutes);
 app.use('/api/lists', listRoutes); 
 app.use('/api/shopping-carts', shoppingCartRoutes);
+app.use('/api/search-history', searchHistoryRoutes);
 app.use('/api/', databaseRoutes);
 app.use('/api/products', productRoutes);
 

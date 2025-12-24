@@ -19,7 +19,9 @@ const databaseRoutes = require('./routes/database');
 const productRoutes = require('./routes/products');
 const shoppingCartRoutes = require('./routes/shoppingCart');
 const listRoutes = require('./routes/list');
+const catalogRoutes = require('./routes/catalog');
 
+app.use('/api/catalogs', catalogRoutes);
 app.use('/api/lists', listRoutes); 
 app.use('/api/shopping-carts', shoppingCartRoutes);
 app.use('/api/', databaseRoutes);

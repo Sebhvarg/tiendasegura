@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const Catalog = require('../models/catalog');
 async function createProduct(req, res, next) {
   try {
     const payload = req.body;
@@ -27,8 +28,25 @@ async function getListProducts(req, res, next) {
     }
 }
 
+// agregar al catalogo
+async function addToCatalog(req, res, next) {
+  try {
+    const { catalogId, productId } = req.params;
+    const catalog = await Catalog.findById(catalogId);
+    if (!catalog) return res.status(404).json({ error: 'Catalog not found' });
+    catalog.products.push(productId);
+    await catalog.save();
+    res.json(catalog);
+  }
+  catch (err) {
+    next(err);
+  }
+}
+
+
 module.exports = {
   createProduct,
   getProduct,
   getListProducts,
+  addToCatalog,
 };

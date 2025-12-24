@@ -5,7 +5,7 @@ async function getList(req, res, next) {
   try {
     const lists = await List.find().exec();
 
-    const listsWithCorrectPrice = await Promise.all(
+    const updatedLists = await Promise.all(
       lists.map(async (list) => {
         const products = await Product.find({
           _id: { $in: list.products }
@@ -16,14 +16,15 @@ async function getList(req, res, next) {
           0
         );
 
-        return {
-          ...list.toObject(),
-          price: Number(totalPrice.toFixed(2)) 
-        };
+        // 🔹 Actualiza y guarda en Mongo
+        list.price = Number(totalPrice.toFixed(2));
+        await list.save();
+
+        return list;
       })
     );
 
-    res.json(listsWithCorrectPrice);
+    res.json(updatedLists);
   } catch (err) {
     next(err);
   }

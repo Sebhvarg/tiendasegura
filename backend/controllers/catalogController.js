@@ -1,3 +1,4 @@
+const SearchHistory = require('../models/searchHistory');
 const Catalog = require('../models/catalog');
 const Product = require('../models/product');
 const Shop = require('../models/shop');
@@ -22,7 +23,7 @@ async function getCatalog(req, res, next) {
  */
 async function searchCatalog(req, res, next) {
   try {
-    const { q } = req.query;
+    const { q, clientId } = req.query;
 
     if (!q) {
       return res.status(400).json({
@@ -30,9 +31,16 @@ async function searchCatalog(req, res, next) {
       });
     }
 
+    // GUARDAR HISTORIAL DE BÚSQUEDA
+    if (clientId) {
+      await SearchHistory.create({
+        client: clientId,
+        query: q
+      });
+    }
+
     const regex = new RegExp(q, 'i');
 
-    // Buscar productos
     const products = await Product.find({
       $or: [
         { name: regex },
@@ -41,15 +49,11 @@ async function searchCatalog(req, res, next) {
       ]
     });
 
-    // Buscar tiendas
     const shops = await Shop.find({
       name: regex
     });
 
-    res.json({
-      products,
-      shops
-    });
+    res.json({ products, shops });
 
   } catch (err) {
     next(err);

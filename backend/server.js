@@ -20,7 +20,9 @@ const productRoutes = require('./routes/products');
 const shoppingCartRoutes = require('./routes/shoppingCart');
 const listRoutes = require('./routes/list');
 const catalogRoutes = require('./routes/catalog');
+const orderRoutes = require('./routes/order');
 
+app.use('/api/orders', orderRoutes);
 app.use('/api/catalogs', catalogRoutes);
 app.use('/api/lists', listRoutes); 
 app.use('/api/shopping-carts', shoppingCartRoutes);

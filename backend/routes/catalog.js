@@ -6,3 +6,4 @@ router.get('/', controller.getCatalog);
 
 
 module.exports = router;
+router.get('/search', catalogController.searchCatalog);

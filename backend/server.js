@@ -15,6 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rutas
+const authRoutes = require('./routes/auth');
 const databaseRoutes = require('./routes/database');
 const productRoutes = require('./routes/products');
 const shoppingCartRoutes = require('./routes/shoppingCart');
@@ -24,6 +25,7 @@ const orderRoutes = require('./routes/order');
 const searchHistoryRoutes = require('./routes/searchHistory');
 
 
+app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/catalogs', catalogRoutes);
 app.use('/api/lists', listRoutes); 

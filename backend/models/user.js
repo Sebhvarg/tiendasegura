@@ -9,7 +9,7 @@ const userSchema = new Schema(
         email: { type: String, required: true, unique: true },
         address: { type: String, required: true },
         phone: { type: String, required: true },
-        password: { type: String, required: true },
+        password: { type: String, required: true, select: false }, // No mostrar password por defecto
         DateOfBirth: { type: Date, required: true },
         userType: { type: String, enum: ['admin', 'customer', 'seller'], required: true },
         createdAt: { type: Date, default: Date.now },
@@ -19,6 +19,7 @@ const userSchema = new Schema(
     { timestamps: true }
 );
 
+// unique ya crea índices; no necesitamos índices manuales adicionales
 const User = model('User', userSchema);
 
 module.exports = User;

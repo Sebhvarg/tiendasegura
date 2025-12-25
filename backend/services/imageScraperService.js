@@ -1,8 +1,12 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-function buildQuery(name, brand = '') {
-  const q = [brand, name].filter(Boolean).join(' ').trim();
+function buildQuery(name, brand = '', netContent, netContentUnit) {
+  const contentPart =
+    netContent !== undefined && netContent !== null
+      ? `${netContent}${netContentUnit ? ` ${netContentUnit}` : ''}`
+      : '';
+  const q = [brand, name, contentPart].filter(Boolean).join(' ').trim();
   return encodeURIComponent(q);
 }
 
@@ -40,9 +44,9 @@ function extractImageFromHtml(html) {
 }
 
 
-async function searchProductImage(name, brand = '') {
+async function searchProductImage(name, brand = '', netContent, netContentUnit) {
   try {
-    const query = buildQuery(name, brand);
+    const query = buildQuery(name, brand, netContent, netContentUnit);
     const url = `https://www.google.com/search?q=${query}&tbm=isch`;
 
     const res = await axios.get(url, {
@@ -69,9 +73,9 @@ async function searchProductImage(name, brand = '') {
 /**
  * Busca varias imágenes (hasta limit) y devuelve un array.
  */
-async function searchProductImages(name, brand = '', limit = 5) {
+async function searchProductImages(name, brand = '', limit = 5, netContent, netContentUnit) {
   try {
-    const query = buildQuery(name, brand);
+    const query = buildQuery(name, brand, netContent, netContentUnit);
     const url = `https://www.google.com/search?q=${query}&tbm=isch`;
 
     const res = await axios.get(url, {

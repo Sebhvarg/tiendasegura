@@ -8,6 +8,8 @@ const productSchema = new Schema(
         description: { type: String, trim: true, default: '' },
         brand : { type: String, trim: true, default: '' },
         price: { type: Number, required: true, min: 0.05 },
+        netContent: { type: Number, required: true, min: 0 },
+        netContentUnit: { type: String, required: true, enum: Object.values(require('../enum/netContent')) },
         stock: { type: Number, default: 0, min: 0 },
         imageUrl: { type: String, default: null },
         isActive: { type: Boolean, default: true },

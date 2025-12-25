@@ -9,8 +9,13 @@ async function createProduct(req, res, next) {
     
     // Si no se proporciona imageUrl, buscar automáticamente
     if (!payload.imageUrl && payload.name) {
-      console.log(`🔍 Buscando imagen para: ${payload.name} ${payload.brand || ''}`);
-      const imageUrl = await searchProductImage(payload.name, payload.brand || '');
+      console.log(`🔍 Buscando imagen para: ${payload.name} ${payload.brand || ''} ${payload.netContent ?? ''} ${payload.netContentUnit ?? ''}`);
+      const imageUrl = await searchProductImage(
+        payload.name,
+        payload.brand || '',
+        payload.netContent,
+        payload.netContentUnit
+      );
       if (imageUrl) {
         payload.imageUrl = imageUrl;
       }

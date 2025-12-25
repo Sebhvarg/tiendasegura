@@ -1,9 +1,21 @@
 const Product = require('../models/product');
 const Catalog = require('../models/catalog');
 const List = require('../models/list');
+const { searchProductImage } = require('../services/imageScraperService');
+
 async function createProduct(req, res, next) {
   try {
     const payload = req.body;
+    
+    // Si no se proporciona imageUrl, buscar automáticamente
+    if (!payload.imageUrl && payload.name) {
+      console.log(`🔍 Buscando imagen para: ${payload.name} ${payload.brand || ''}`);
+      const imageUrl = await searchProductImage(payload.name, payload.brand || '');
+      if (imageUrl) {
+        payload.imageUrl = imageUrl;
+      }
+    }
+    
     const product = await Product.createProduct(payload);
     res.status(201).json(product);
   } catch (err) {

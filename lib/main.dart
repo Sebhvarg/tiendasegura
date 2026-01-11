@@ -4,6 +4,7 @@ import 'views/inicio.dart';
 import 'views/inicio_sesion.dart';
 import 'views/registro.dart';
 import 'ViewModel/auth_viewmodel.dart';
+import 'themes/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,11 +20,9 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Tienda Segura',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 0, 220, 179),
-          ),
-        ),
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.light,
         routes: {
           '/login': (_) => const LoginPage(),
           '/register': (_) => const RegisterPage(),

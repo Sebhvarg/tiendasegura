@@ -18,6 +18,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
+  final _date_of_birthCtrl = TextEditingController();
+  String? _selectedUserType;
 
   @override
   void dispose() {
@@ -28,6 +30,8 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
+    _date_of_birthCtrl.dispose();
+    _selectedUserType = null;
     super.dispose();
   }
 
@@ -42,6 +46,10 @@ class _RegisterPageState extends State<RegisterPage> {
       password: _passwordCtrl.text,
       phone: _phoneCtrl.text.isEmpty ? null : _phoneCtrl.text.trim(),
       address: _addressCtrl.text.isEmpty ? null : _addressCtrl.text.trim(),
+      dateOfBirth: _date_of_birthCtrl.text.isEmpty
+          ? null
+          : _date_of_birthCtrl.text.trim(),
+      userType: _selectedUserType ?? 'customer',
     );
     if (!mounted) return;
     if (ok) {
@@ -57,7 +65,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthViewModel>();
     return Scaffold(
       appBar: AppBar(title: const Text('Crear cuenta')),
       body: SingleChildScrollView(
@@ -101,6 +108,7 @@ class _RegisterPageState extends State<RegisterPage> {
               const SizedBox(height: 8),
               TextFormField(
                 controller: _phoneCtrl,
+                keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
                   labelText: 'Teléfono (opcional)',
                 ),
@@ -112,19 +120,68 @@ class _RegisterPageState extends State<RegisterPage> {
                   labelText: 'Dirección (opcional)',
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _date_of_birthCtrl,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Fecha de nacimiento (opcional)',
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                onTap: () async {
+                  FocusScope.of(context).requestFocus(FocusNode());
+                  DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime(2000, 1, 1),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    locale: const Locale('es', ''), // Opcional: español
+                  );
+                  if (picked != null) {
+                    _date_of_birthCtrl.text =
+                        "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                  }
+                },
+              ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _selectedUserType,
+                hint: const Text('Tipo de usuario'),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedUserType = value;
+                  });
+                },
+                items: const [
+                  DropdownMenuItem(value: 'customer', child: Text('Cliente')),
+                  DropdownMenuItem(
+                    value: 'shop_owner',
+                    child: Text('Dueño de tienda'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: auth.isLoading ? null : _submit,
-                child: auth.isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Registrarme'),
+                onPressed: _submit,
+                child: const Text('Registrarme'),
               ),
             ],
           ),
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            // insterar imagen
+            SizedBox(height: 8),
+            Image(
+              image: AssetImage('lib/assets/imgs/logo/logo_gris.webp'),
+              height: 40,
+            ),
+          ],
         ),
       ),
     );

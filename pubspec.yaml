@@ -66,6 +66,14 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  # Application assets (images, etc.)
+  assets:
+    - lib/assets/
+    - lib/assets/imgs/
+    - lib/assets/icons/
+    - lib/assets/imgs/logo/logo.webp
+    - lib/assets/imgs/logo/logo_gris.webp
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

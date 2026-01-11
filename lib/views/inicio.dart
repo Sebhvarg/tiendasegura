@@ -9,22 +9,57 @@ class Inicio extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthViewModel>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Tienda Segura')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Bienvenido a Tienda Segura'),
-            const SizedBox(height: 24),
             if (!auth.isAuthenticated) ...[
-              ElevatedButton(
-                onPressed: () => Navigator.pushNamed(context, '/login'),
-                child: const Text('Iniciar sesión'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => Navigator.pushNamed(context, '/register'),
-                child: const Text('Registrarme'),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Icon(
+                        Icons.person,
+                        size: 48,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        decoration: InputDecoration(
+                          labelText: 'Correo electrónico',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        decoration: InputDecoration(labelText: 'Contraseña'),
+                      ),
+
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed('/login');
+                        },
+                        child: const Text('Iniciar sesión'),
+                      ),
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        '¿No tienes una cuenta?',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: () {
+                          Navigator.of(context).pushNamed('/register');
+                        },
+                        child: const Text('Registrarse'),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ] else ...[
               Text(
@@ -36,6 +71,21 @@ class Inicio extends StatelessWidget {
                 child: const Text('Cerrar sesión'),
               ),
             ],
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            // insterar imagen
+            SizedBox(height: 8),
+            Image(
+              image: AssetImage('lib/assets/imgs/logo/logo_gris.webp'),
+              height: 40,
+            ),
           ],
         ),
       ),

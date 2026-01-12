@@ -70,7 +70,6 @@ flutter:
   assets:
     - lib/assets/
     - lib/assets/imgs/
-    - lib/assets/icons/
     - lib/assets/imgs/logo/logo.webp
     - lib/assets/imgs/logo/logo_gris.webp
 

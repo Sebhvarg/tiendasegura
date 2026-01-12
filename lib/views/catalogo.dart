@@ -45,6 +45,13 @@ class CatalogoPage extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
+                  // Botón para registrar nuevo producto (temporal)
+                  IconButton(
+                    icon: const Icon(Icons.add_box),
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/registrar-producto');
+                    },
+                  ),
                   // Botón carrito en el AppBar estilo
                   IconButton(
                     icon: const Icon(Icons.shopping_cart),

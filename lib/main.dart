@@ -7,6 +7,7 @@ import 'views/carrito.dart';
 import 'views/inicio.dart';
 import 'views/inicio_sesion.dart';
 import 'views/registro.dart';
+import 'views/registrar_producto.dart';
 
 // VIEWMODELS
 import 'ViewModel/auth_viewmodel.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
           '/register': (_) => const RegisterPage(),
           '/home': (_) => const Inicio(),
           '/catalogo': (_) => const CatalogoPage(),
+          '/registrar-producto': (_) => const RegistrarProductoPage(),
           '/carrito': (_) => const CarritoPage(),
         },
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../ViewModel/auth_viewmodel.dart';
+import 'package:flutter/services.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -52,9 +53,19 @@ class _LoginPageState extends State<LoginPage> {
               TextFormField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
+
                 decoration: const InputDecoration(labelText: 'Email'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Ingrese su email';
+                  if (!RegExp(
+                    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                  ).hasMatch(v)) {
+                    return 'Ingrese un email válido';
+                  }
                   return null;
                 },
               ),
@@ -62,9 +73,19 @@ class _LoginPageState extends State<LoginPage> {
               TextFormField(
                 controller: _passwordCtrl,
                 obscureText: true,
+                textCapitalization: TextCapitalization.none,
+                inputFormatters: [
+                  FilteringTextInputFormatter.deny(RegExp(r'\s')),
+                ],
+
                 decoration: const InputDecoration(labelText: 'Contraseña'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Ingrese su contraseña';
+                  if (!RegExp(
+                    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
+                  ).hasMatch(v)) {
+                    return 'La contraseña debe contener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial';
+                  }
                   return null;
                 },
               ),

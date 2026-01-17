@@ -64,11 +64,60 @@ class Inicio extends StatelessWidget {
             ] else ...[
               Text(
                 'Hola, ${auth.user?.name.isNotEmpty == true ? auth.user!.name : 'usuario'}',
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
-              const SizedBox(height: 12),
-              ElevatedButton(
+              const SizedBox(height: 8),
+              if (auth.user?.userType == 'shop_owner') ...[
+                const Text(
+                  'Panel de Vendedor',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/registrar-producto');
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Registrar nuevo producto'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    // TODO: Implementar vista de 'Mis productos'
+                    Navigator.of(context).pushNamed('/catalogo');
+                  },
+                  icon: const Icon(Icons.list),
+                  label: const Text('Ver mis productos'),
+                ),
+              ] else ...[
+                const Text(
+                  'Panel de Cliente',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/catalogo');
+                  },
+                  icon: const Icon(Icons.shopping_bag),
+                  label: const Text('Ver Catálogo'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/carrito');
+                  },
+                  icon: const Icon(Icons.shopping_cart),
+                  label: const Text('Mi Carrito'),
+                ),
+              ],
+              const SizedBox(height: 24),
+              TextButton(
                 onPressed: () => auth.logout(),
-                child: const Text('Cerrar sesión'),
+                child: const Text(
+                  'Cerrar sesión',
+                  style: TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ],

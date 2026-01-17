@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../ViewModel/auth_viewmodel.dart';
+import 'package:flutter/services.dart';
+import 'dart:math';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -13,7 +15,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _lastNameCtrl = TextEditingController();
-  final _usernameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
@@ -25,7 +26,6 @@ class _RegisterPageState extends State<RegisterPage> {
   void dispose() {
     _nameCtrl.dispose();
     _lastNameCtrl.dispose();
-    _usernameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _phoneCtrl.dispose();
@@ -37,11 +37,23 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final nameVal = _nameCtrl.text.trim();
+    final lastVal = _lastNameCtrl.text.trim();
+
+    // Genera el nombre de usuario
+    final n = nameVal.replaceAll(' ', '').toLowerCase();
+    final l = lastVal.replaceAll(' ', '').toLowerCase();
+    final first3 = n.length >= 3 ? n.substring(0, 3) : n.padRight(3, 'X');
+    final last2 = l.length >= 2 ? l.substring(0, 2) : l.padRight(2, 'X');
+    final randomPart = Random().nextInt(1000).toString().padLeft(3, '0');
+    final generatedUsername = '$first3$last2$randomPart';
+
     final auth = context.read<AuthViewModel>();
     final ok = await auth.register(
-      name: _nameCtrl.text.trim(),
-      lastName: _lastNameCtrl.text.trim(),
-      username: _usernameCtrl.text.trim(),
+      name: nameVal,
+      lastName: lastVal,
+      username: generatedUsername,
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
       phone: _phoneCtrl.text.isEmpty ? null : _phoneCtrl.text.trim(),
@@ -76,58 +88,120 @@ class _RegisterPageState extends State<RegisterPage> {
             children: [
               TextFormField(
                 controller: _nameCtrl,
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(20),
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'[A-Za-záéíóúÁÉÍÓÚñÑ\s]'),
+                  ),
+                ],
                 decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (!RegExp(r'^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,20}$').hasMatch(v)) {
+                    return 'Ingrese un nombre válido';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _lastNameCtrl,
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(20),
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'[A-Za-záéíóúÁÉÍÓÚñÑ\s]'),
+                  ),
+                ],
                 decoration: const InputDecoration(labelText: 'Apellido'),
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (!RegExp(r'^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,20}$').hasMatch(v)) {
+                    return 'Ingrese un apellido válido';
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _usernameCtrl,
-                decoration: const InputDecoration(labelText: 'Usuario'),
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
-              ),
+
               const SizedBox(height: 8),
               TextFormField(
                 controller: _emailCtrl,
                 keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(labelText: 'Email'),
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+
+                textCapitalization: TextCapitalization.none,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (!RegExp(
+                    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                  ).hasMatch(v)) {
+                    return 'Ingrese un email válido';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _passwordCtrl,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: 'Contraseña'),
-                validator: (v) => v == null || v.isEmpty ? 'Requerido' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (!RegExp(
+                    r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
+                  ).hasMatch(v)) {
+                    return 'La contraseña debe contener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _phoneCtrl,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Teléfono (opcional)',
-                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                decoration: const InputDecoration(labelText: 'Teléfono'),
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (!RegExp(r'^\d{10}$').hasMatch(v)) {
+                    return 'Ingrese un teléfono válido';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _addressCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Dirección (opcional)',
-                ),
+                decoration: const InputDecoration(labelText: 'Dirección'),
+                textCapitalization: TextCapitalization.sentences,
+                inputFormatters: [
+                  LengthLimitingTextInputFormatter(50),
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'[A-Za-z0-9áéíóúÁÉÍÓÚñÑ\s,#.-]'),
+                  ),
+                ],
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  if (!RegExp(r'^[A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,50}$').hasMatch(v)) {
+                    return 'Ingrese una dirección válida';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _date_of_birthCtrl,
                 readOnly: true,
                 decoration: const InputDecoration(
-                  labelText: 'Fecha de nacimiento (opcional)',
+                  labelText: 'Fecha de nacimiento',
+                  hintText: 'YYYY-MM-DD',
                   suffixIcon: Icon(Icons.calendar_today),
                 ),
+
                 onTap: () async {
                   FocusScope.of(context).requestFocus(FocusNode());
                   DateTime? picked = await showDatePicker(
@@ -142,15 +216,23 @@ class _RegisterPageState extends State<RegisterPage> {
                         "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
                   }
                 },
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  return null;
+                },
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedUserType,
+                initialValue: _selectedUserType,
                 hint: const Text('Tipo de usuario'),
                 onChanged: (value) {
                   setState(() {
                     _selectedUserType = value;
                   });
+                },
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Requerido';
+                  return null;
                 },
                 items: const [
                   DropdownMenuItem(value: 'customer', child: Text('Cliente')),

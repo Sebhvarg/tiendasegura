@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
 // VIEWS
@@ -27,12 +28,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthViewModel(),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => CarritoViewModel(),
-        ),
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => CarritoViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -40,9 +37,14 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.light,
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [Locale('es', ''), Locale('en', '')],
 
-        // 👉 ENTRAS DIRECTO AL CATÁLOGO
-        initialRoute: '/catalogo',
+        initialRoute: '/home',
 
         routes: {
           '/login': (_) => const LoginPage(),

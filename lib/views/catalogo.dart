@@ -13,12 +13,32 @@ class CatalogoPage extends StatelessWidget {
     // 🔹 Productos organizados por categoría
     final Map<String, List<Producto>> categorias = {
       'Bebidas': [
-        Producto(id: '1', nombre: 'Coca Cola', precio: 1.25, imagen: 'lib/assets/imgs/coca.png'),
-        Producto(id: '4', nombre: 'Agua', precio: 0.60, imagen: 'lib/assets/imgs/agua.png'),
+        Producto(
+          id: '1',
+          nombre: 'Coca Cola',
+          precio: 1.25,
+          imagen: 'lib/assets/imgs/coca.png',
+        ),
+        Producto(
+          id: '4',
+          nombre: 'Agua',
+          precio: 0.60,
+          imagen: 'lib/assets/imgs/agua.png',
+        ),
       ],
       'Snacks': [
-        Producto(id: '2', nombre: 'Ruffles', precio: 0.75, imagen: 'lib/assets/imgs/ruffles.png'),
-        Producto(id: '3', nombre: 'Salticas', precio: 0.50, imagen: 'lib/assets/imgs/salticas.png'),
+        Producto(
+          id: '2',
+          nombre: 'Ruffles',
+          precio: 0.75,
+          imagen: 'lib/assets/imgs/ruffles.png',
+        ),
+        Producto(
+          id: '3',
+          nombre: 'Salticas',
+          precio: 0.50,
+          imagen: 'lib/assets/imgs/salticas.png',
+        ),
       ],
     };
 
@@ -32,17 +52,14 @@ class CatalogoPage extends StatelessWidget {
               child: Row(
                 children: [
                   Image.asset(
-                    'lib/assets/imgs/logo/logo.webp', // tu logo
-                    width: 50,
-                    height: 50,
+                    'lib/assets/imgs/logo/isologo.webp', // tu logo
+                    width: 25,
+                    height: 25,
                   ),
                   const SizedBox(width: 10),
                   const Text(
                     'Tiendasegura',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   // Botón para registrar nuevo producto (temporal)
@@ -92,12 +109,13 @@ class CatalogoPage extends StatelessWidget {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: productos.length,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
                         itemBuilder: (context, index) {
                           final producto = productos[index];
                           return Card(
@@ -116,17 +134,25 @@ class CatalogoPage extends StatelessWidget {
                                     children: [
                                       Text(
                                         producto.nombre,
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text('\$${producto.precio.toStringAsFixed(2)}'),
+                                      Text(
+                                        '\$${producto.precio.toStringAsFixed(2)}',
+                                      ),
                                       const SizedBox(height: 6),
                                       ElevatedButton(
                                         onPressed: () {
                                           carrito.agregarProducto(producto);
-                                          ScaffoldMessenger.of(context).showSnackBar(
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
                                             const SnackBar(
-                                              content: Text('Producto agregado al carrito'),
+                                              content: Text(
+                                                'Producto agregado al carrito',
+                                              ),
                                               duration: Duration(seconds: 1),
                                             ),
                                           );

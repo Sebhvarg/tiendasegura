@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../model/API/auth_repository.dart';
+import '../model/API/shop_repository.dart';
 import '../model/auth_models.dart';
 
 class AuthViewModel extends ChangeNotifier {
@@ -27,6 +28,11 @@ class AuthViewModel extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final t = prefs.getString('auth_token');
     if (t != null && t.isNotEmpty) {
+      // Nota: Aquí no tenemos los datos completos del usuario, idealmente deberíamos hacer un 'getMe'
+      // Por simplicidad, asumimos estado básico y luego checkSellerStatus intentará actualizar si es posible
+      // Ojo: userType estará vacío aquí, lo que fallará en checkSellerStatus.
+      // Necesitamos persistir userType o hacer fetch profile.
+      // Omitiré checkSellerStatus aquí por ahora para evitar bugs complejos sin fetch profile.
       _auth = AuthData(
         user: const UserModel(
           id: '',
@@ -51,6 +57,7 @@ class AuthViewModel extends ChangeNotifier {
       if (res.success && res.data != null) {
         _auth = res.data;
         await _persistToken(_auth!.token);
+        await checkSellerStatus(); // Verificar tienda
         return true;
       }
       _error = res.message ?? 'Error desconocido';
@@ -93,6 +100,7 @@ class AuthViewModel extends ChangeNotifier {
       if (res.success && res.data != null) {
         _auth = res.data;
         await _persistToken(_auth!.token);
+        await checkSellerStatus();
         return true;
       }
       _error = res.message ?? 'Error desconocido';
@@ -111,5 +119,44 @@ class AuthViewModel extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     notifyListeners();
+  }
+
+  // -- Lógica de Vendedor --
+  bool _hasShop = false;
+  List<dynamic> _shops = []; // Stores the list of shops owned by the user
+
+  bool get hasShop => _hasShop;
+  List<dynamic> get shops => _shops;
+
+  Future<void> checkSellerStatus() async {
+    if (!isAuthenticated ||
+        (user!.userType != 'seller' && user!.userType != 'shop_owner'))
+      return;
+
+    try {
+      final fetchedShops = await ShopRepository().getMyShops(token!);
+      _shops = fetchedShops;
+      _hasShop = _shops.isNotEmpty;
+      notifyListeners();
+    } catch (e) {
+      print('Error verificando status de vendedor: $e');
+    }
+  }
+
+  Future<bool> createShop(String name, String address) async {
+    if (!isAuthenticated) return false;
+    _loading = true;
+    notifyListeners();
+    try {
+      await ShopRepository().createShop(token!, name, address);
+      _hasShop = true;
+      return true;
+    } catch (e) {
+      _error = e.toString();
+      return false;
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
   }
 }

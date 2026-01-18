@@ -8,7 +8,6 @@ class ShopRepository {
 
   Uri _url(String path) => Uri.parse('${ApiConfig.baseUrl}$path');
 
-  
   Future<List<dynamic>> getShops() async {
     final response = await _client.get(_url('/api/shops'));
 
@@ -27,5 +26,37 @@ class ShopRepository {
     }
 
     return jsonDecode(response.body) as List<dynamic>;
+  }
+
+  Future<void> createShop(String token, String name, String address) async {
+    final response = await _client.post(
+      _url('/api/shops'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'name': name, 'address': address}),
+    );
+
+    if (response.statusCode != 201) {
+      final body = jsonDecode(response.body);
+      throw Exception(body['message'] ?? 'Error al crear la tienda');
+    }
+  }
+
+  Future<List<dynamic>> getMyShops(String token) async {
+    final response = await _client.get(
+      _url('/api/shops/my-shops'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      // Si recibimos 404, puede significar que no tiene shops (o perfil no creado)
+      if (response.statusCode == 404) return [];
+      throw Exception('Error al obtener mis tiendas');
+    }
+
+    final json = jsonDecode(response.body);
+    return json['data'] as List<dynamic>;
   }
 }

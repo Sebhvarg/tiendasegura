@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const Client = require('../models/client');
+const ShopOwner = require('../models/shop_owner');
 const ShoppingCart = require('../models/shopping_cart');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -66,6 +67,8 @@ exports.register = async (req, res) => {
     // Si es customer, crear Client y ShoppingCart vacío
     let clientDoc;
     let shoppingCartDoc;
+    let shopOwnerDoc;
+
     if (user.userType === 'customer') {
       clientDoc = await Client.create({ user: user._id });
       shoppingCartDoc = await ShoppingCart.create({
@@ -75,6 +78,13 @@ exports.register = async (req, res) => {
       });
       clientDoc.shoppingCart = [shoppingCartDoc._id];
       await clientDoc.save();
+    } 
+    // Si es seller o shop_owner, crear ShopOwner
+    else if (user.userType === 'seller' || user.userType === 'shop_owner') {
+        shopOwnerDoc = await ShopOwner.create({
+            user: user._id,
+            shops: []
+        });
     }
 
     // Generar token
@@ -93,6 +103,7 @@ exports.register = async (req, res) => {
         token,
         clientId: clientDoc?._id,
         shoppingCartId: shoppingCartDoc?._id,
+        shopOwnerId: shopOwnerDoc?._id,
       }
     });
 

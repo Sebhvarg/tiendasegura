@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../model/producto.dart';
 import '../ViewModel/carrito_viewmodel.dart';
 import '../ViewModel/auth_viewmodel.dart';
+import '../model/API/shop_repository.dart';
 
 class CatalogoPage extends StatefulWidget {
   const CatalogoPage({super.key});
@@ -13,68 +14,125 @@ class CatalogoPage extends StatefulWidget {
 
 class _CatalogoPageState extends State<CatalogoPage> {
   String _searchQuery = '';
+  // Cache products to avoid refetching on every rebuild/search
+  List<Producto>? _allProducts;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    // Defer loading until context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProducts();
+    });
+  }
+
+  Future<void> _loadProducts() async {
+    final auth = context.read<AuthViewModel>();
+    // Ensure we have the user's shops
+    // If not authenticated or no shops, handle gracefully
+    if (!auth.isAuthenticated) {
+      setState(() {
+        _isLoading = false;
+        _error = "No estás autenticado";
+      });
+      return;
+    }
+
+    // Attempt to refresh shop list if empty (optional, but good safety)
+    if (auth.shops.isEmpty) {
+      await auth.checkSellerStatus();
+    }
+
+    if (auth.shops.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _error = "No tienes una tienda registrada.";
+      });
+      return;
+    }
+
+    // Assuming we fetch products for the FIRST shop in the list for now
+    // If multiple shops are supported in UI, we'd need a shop selector.
+    // For now, take the first one.
+    final shopId = auth.shops.first['_id'];
+
+    if (shopId == null) {
+      setState(() {
+        _isLoading = false;
+        _error = "Error: ID de tienda no encontrado";
+      });
+      return;
+    }
+
+    try {
+      final repo = ShopRepository();
+      final productsData = await repo.getProductsByShop(shopId);
+
+      // Convert dynamic list to List<Producto>
+      final loadedProducts = productsData.map((p) {
+        return Producto(
+          id: p["_id"]?.toString() ?? '',
+          nombre: (p["name"] ?? "Sin nombre").toString(),
+          precio: (p["price"] ?? 0).toDouble(),
+          imagen: (p["imageUrl"] ?? "").toString(),
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _allProducts = loadedProducts;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final carrito = context.read<CarritoViewModel>();
     final auth = context.read<AuthViewModel>();
 
-    // 🔹 Productos organizados por categoría (Simulados)
-    // En una app real esto vendría del ViewModel/API
-    final Map<String, List<Producto>> allCategorias = {
-      'Bebidas': [
-        Producto(
-          id: '1',
-          nombre: 'Coca Cola',
-          precio: 1.25,
-          imagen: 'lib/assets/imgs/coca.png',
-        ),
-        Producto(
-          id: '4',
-          nombre: 'Agua',
-          precio: 0.60,
-          imagen: 'lib/assets/imgs/agua.png',
-        ),
-      ],
-      'Snacks': [
-        Producto(
-          id: '2',
-          nombre: 'Ruffles',
-          precio: 0.75,
-          imagen: 'lib/assets/imgs/ruffles.png',
-        ),
-        Producto(
-          id: '3',
-          nombre: 'Salticas',
-          precio: 0.50,
-          imagen: 'lib/assets/imgs/salticas.png',
-        ),
-      ],
-    };
-
-    // Lógica de filtrado
-    Map<String, List<Producto>> filteredCategorias = {};
-    if (_searchQuery.isEmpty) {
-      filteredCategorias = allCategorias;
-    } else {
-      allCategorias.forEach((key, value) {
-        final filteredProds = value
+    // Filter Logic
+    /*
+    List<Producto> filteredProducts = [];
+    if (_allProducts != null) {
+      if (_searchQuery.isEmpty) {
+        filteredProducts = _allProducts!;
+      } else {
+        filteredProducts = _allProducts!
             .where(
               (p) =>
                   p.nombre.toLowerCase().contains(_searchQuery.toLowerCase()),
             )
             .toList();
-        if (filteredProds.isNotEmpty) {
-          filteredCategorias[key] = filteredProds;
-        }
-      });
+      }
     }
+    */
+
+    // Get Shop Name (Assuming first shop for now)
+    final shopName = auth.shops.isNotEmpty
+        ? (auth.shops.first['name'] ?? 'Mi Tienda')
+        : 'Mi Tienda';
+
+    // Grouping logic (Optional) - Backend might not return categories yet.
+    // Existing code simulated categories. We can group by a 'category' field if it exists,
+    // but for now, let's display them in a single "General" or similar block,
+    // OR just a grid if no category field is standard.
+    // Since `Producto` model doesn't strictly have 'category', let's use a single list for now to match `ProductosTiendaPage` style but keep the Search layout.
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // 🔹 Logo y título
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Row(
@@ -86,36 +144,21 @@ class _CatalogoPageState extends State<CatalogoPage> {
                     errorBuilder: (c, e, s) => const Icon(Icons.store),
                   ),
                   const SizedBox(width: 10),
-                  const Text(
-                    'Tiendasegura',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  Text(
+                    "Tienda: $shopName",
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Spacer(),
-                  // Botón para registrar nuevo producto (temporal/demo)
                   IconButton(
                     icon: const Icon(Icons.add_box),
                     onPressed: () {
-                      Navigator.pushNamed(context, '/registrar-producto');
-                    },
-                  ),
-                  // Botón carrito en el AppBar estilo
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart),
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/carrito');
-                    },
-                  ),
-                  // Botón Cerrar Sesión
-                  IconButton(
-                    icon: const Icon(Icons.logout, color: Colors.red),
-                    tooltip: 'Cerrar Sesión',
-                    onPressed: () {
-                      auth.logout();
-                      Navigator.pushNamedAndRemoveUntil(
+                      Navigator.pushNamed(
                         context,
-                        '/',
-                        (route) => false,
-                      );
+                        '/registrar-producto',
+                      ).then((_) => _loadProducts()); // Reload on return
                     },
                   ),
                 ],
@@ -145,104 +188,114 @@ class _CatalogoPageState extends State<CatalogoPage> {
 
             const Divider(thickness: 2),
 
-            // 🔹 Catálogo por categorías
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(12),
-                children: filteredCategorias.entries.map((entry) {
-                  final categoria = entry.key;
-                  final productos = entry.value;
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Nombre de la categoría
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          categoria,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      // Grid de productos de esa categoría
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: productos.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
-                        itemBuilder: (context, index) {
-                          final producto = productos[index];
-                          return Card(
-                            elevation: 3,
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Image.asset(
-                                    producto.imagen,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (c, o, s) => const Icon(
-                                      Icons.image_not_supported,
-                                      size: 50,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    children: [
-                                      Text(
-                                        producto.nombre,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '\$${producto.precio.toStringAsFixed(2)}',
-                                      ),
-                                      const SizedBox(height: 6),
-                                      ElevatedButton(
-                                        onPressed: () {
-                                          carrito.agregarProducto(producto);
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Producto agregado al carrito',
-                                              ),
-                                              duration: Duration(seconds: 1),
-                                            ),
-                                          );
-                                        },
-                                        child: const Text('Agregar'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
+            // 🔹 Contenido Principal
+            Expanded(child: _buildContent(carrito)),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildContent(CarritoViewModel carrito) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text("Error: $_error", textAlign: TextAlign.center),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _loadProducts,
+              child: const Text('Reintentar'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_allProducts == null || _allProducts!.isEmpty) {
+      return const Center(child: Text("Tu tienda no tiene productos aún."));
+    }
+
+    // Apply filter
+    final displayList = _searchQuery.isEmpty
+        ? _allProducts!
+        : _allProducts!
+              .where(
+                (p) =>
+                    p.nombre.toLowerCase().contains(_searchQuery.toLowerCase()),
+              )
+              .toList();
+
+    if (displayList.isEmpty) {
+      return const Center(child: Text("No se encontraron productos."));
+    }
+
+    // Grid de productos
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: displayList.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        childAspectRatio: 0.75,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemBuilder: (context, index) {
+        final producto = displayList[index];
+        return Card(
+          elevation: 3,
+          child: Column(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: producto.imagen.startsWith("http")
+                        ? Image.network(
+                            producto.imagen,
+                            fit: BoxFit.cover,
+                            errorBuilder: (c, o, s) =>
+                                const Icon(Icons.image_not_supported, size: 50),
+                          )
+                        : Image.asset(
+                            producto.imagen,
+                            fit: BoxFit.contain,
+                            errorBuilder: (c, o, s) =>
+                                const Icon(Icons.image_not_supported, size: 50),
+                          ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Text(
+                      producto.nombre,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${producto.precio.toStringAsFixed(2)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

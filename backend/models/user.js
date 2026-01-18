@@ -11,7 +11,7 @@ const userSchema = new Schema(
         phone: { type: String, required: true },
         password: { type: String, required: true, select: false }, // No mostrar password por defecto
         DateOfBirth: { type: Date, required: true },
-        userType: { type: String, enum: ['admin', 'customer', 'seller'], required: true },
+        userType: { type: String, enum: ['admin', 'customer', 'seller', 'shop_owner'], required: true },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },
         isActive: { type: Boolean, default: true },

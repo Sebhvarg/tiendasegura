@@ -11,11 +11,9 @@ import 'views/registro.dart';
 import 'views/registrar_producto.dart';
 import 'views/tiendas.dart';
 
-
 // VIEWMODELS
 import 'ViewModel/auth_viewmodel.dart';
 import 'ViewModel/carrito_viewmodel.dart';
-
 
 // THEME
 import 'themes/app_theme.dart';
@@ -47,7 +45,7 @@ class MyApp extends StatelessWidget {
         ],
         supportedLocales: const [Locale('es', ''), Locale('en', '')],
 
-        initialRoute: '/tiendas',
+        initialRoute: '/home',
 
         routes: {
           '/login': (_) => const LoginPage(),

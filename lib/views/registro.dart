@@ -61,7 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
       dateOfBirth: _date_of_birthCtrl.text.isEmpty
           ? null
           : _date_of_birthCtrl.text.trim(),
-      userType: _selectedUserType ?? 'customer',
+      userType: _selectedUserType!,
     );
     if (!mounted) return;
     if (ok) {
@@ -237,7 +237,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 items: const [
                   DropdownMenuItem(value: 'customer', child: Text('Cliente')),
                   DropdownMenuItem(
-                    value: 'shop_owner',
+                    value: 'seller',
                     child: Text('Dueño de tienda'),
                   ),
                 ],

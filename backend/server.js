@@ -23,6 +23,7 @@ const listRoutes = require('./routes/list');
 const catalogRoutes = require('./routes/catalog');
 const orderRoutes = require('./routes/order');
 const searchHistoryRoutes = require('./routes/searchHistory');
+const shopRoutes = require('./routes/shops');
 
 
 app.use('/api/auth', authRoutes);
@@ -33,6 +34,7 @@ app.use('/api/shopping-carts', shoppingCartRoutes);
 app.use('/api/search-history', searchHistoryRoutes);
 app.use('/api/', databaseRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/shops', shopRoutes);
 
 
 

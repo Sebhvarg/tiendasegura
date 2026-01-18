@@ -3,15 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../auth_models.dart';
+import 'api_config.dart';
 
-class ApiConfig {
-  // Detecta plataforma para desarrollo local
-  static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (Platform.isAndroid) return 'http://10.0.2.2:3000'; // emulador Android
-    return 'http://localhost:3000';
-  }
-}
 
 class AuthRepository {
   final http.Client _client;

@@ -2,14 +2,7 @@ import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
-
-class ApiConfig {
-  static String get baseUrl {
-    if (kIsWeb) return 'http://localhost:3000';
-    if (Platform.isAndroid) return 'http://10.0.2.2:3000';
-    return 'http://localhost:3000';
-  }
-}
+import 'api_config.dart';
 
 class ProductRepository {
   final http.Client _client;

@@ -317,17 +317,6 @@ class _SellerDashboard extends StatelessWidget {
                     Navigator.of(context).pushNamed('/catalogo');
                   },
                 ),
-                _DashboardCard(
-                  icon: Icons.storefront,
-                  title: 'Configurar Tienda',
-                  color: Colors.purple,
-                  onTap: () {
-                    // TODO: Navigate to Shop Settings
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Próximamente')),
-                    );
-                  },
-                ),
               ],
             ),
           ],

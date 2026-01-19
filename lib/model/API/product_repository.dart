@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
@@ -10,7 +11,7 @@ class ProductRepository {
   Uri _url(String path) => Uri.parse('${ApiConfig.baseUrl}$path');
 
   Future<Map<String, dynamic>> createProduct({
-    required String token, // Token required
+    required String token,
     required String name,
     String? brand,
     double? price,
@@ -19,26 +20,32 @@ class ProductRepository {
     double? netContent,
     String? netContentUnit,
     String? imageUrl,
+    File? imageFile,
   }) async {
-    final body = {
-      'name': name,
-      'brand': brand,
-      'price': price,
-      'description': description,
-      'stock': stock,
-      'netContent': netContent,
-      'netContentUnit': netContentUnit,
-      'imageUrl': imageUrl,
-    }..removeWhere((k, v) => v == null);
+    final request = http.MultipartRequest('POST', _url('/api/products/create'));
+    request.headers['Authorization'] = 'Bearer $token';
 
-    final response = await _client.post(
-      _url('/api/products/create'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(body),
-    );
+    // Add fields
+    request.fields['name'] = name;
+    request.fields['price'] = price.toString();
+    if (brand != null) request.fields['brand'] = brand;
+    if (description != null) request.fields['description'] = description;
+    if (stock != null) request.fields['stock'] = stock.toString();
+    if (netContent != null)
+      request.fields['netContent'] = netContent.toString();
+    if (netContentUnit != null)
+      request.fields['netContentUnit'] = netContentUnit;
+    if (imageUrl != null) request.fields['imageUrl'] = imageUrl;
+
+    // Add file
+    if (imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('productImage', imageFile.path),
+      );
+    }
+
+    final streamlinedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamlinedResponse);
 
     if (response.statusCode != 201) {
       final err = jsonDecode(response.body);
@@ -107,26 +114,32 @@ class ProductRepository {
     double? netContent,
     String? netContentUnit,
     String? imageUrl,
+    File? imageFile,
   }) async {
-    final body = {
-      'name': name,
-      'brand': brand,
-      'price': price,
-      'description': description,
-      'stock': stock,
-      'netContent': netContent,
-      'netContentUnit': netContentUnit,
-      'imageUrl': imageUrl,
-    }..removeWhere((k, v) => v == null);
+    final request = http.MultipartRequest('PUT', _url('/api/products/$id'));
+    request.headers['Authorization'] = 'Bearer $token';
 
-    final response = await _client.put(
-      _url('/api/products/$id'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
-      },
-      body: jsonEncode(body),
-    );
+    // Add fields
+    request.fields['name'] = name;
+    if (price != null) request.fields['price'] = price.toString();
+    if (brand != null) request.fields['brand'] = brand;
+    if (description != null) request.fields['description'] = description;
+    if (stock != null) request.fields['stock'] = stock.toString();
+    if (netContent != null)
+      request.fields['netContent'] = netContent.toString();
+    if (netContentUnit != null)
+      request.fields['netContentUnit'] = netContentUnit;
+    if (imageUrl != null) request.fields['imageUrl'] = imageUrl;
+
+    // Add file
+    if (imageFile != null) {
+      request.files.add(
+        await http.MultipartFile.fromPath('productImage', imageFile.path),
+      );
+    }
+
+    final streamlinedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamlinedResponse);
 
     if (response.statusCode != 200) {
       throw Exception('Error al actualizar producto');

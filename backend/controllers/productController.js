@@ -39,7 +39,9 @@ async function createProduct(req, res, next) {
     }
     
     // 3. Auto-búsqueda de imagen si es necesario
-    if (!payload.imageUrl && payload.name) {
+    if (req.file) {
+      payload.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    } else if (!payload.imageUrl && payload.name) {
       console.log(`🔍 Buscando imagen para: ${payload.name}`);
       const imageUrl = await searchProductImage(
         payload.name,
@@ -234,6 +236,10 @@ async function updateProduct(req, res, next) {
         // Evitar actualizar campos inmutables si los hubiera
         delete updates._id; 
         delete updates.createdAt;
+
+        if (req.file) {
+            updates.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+        }
 
         const product = await Product.findByIdAndUpdate(id, updates, { new: true });
 

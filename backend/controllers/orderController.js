@@ -77,7 +77,10 @@ async function getOrdersByShop(req, res, next) {
     try {
         const { shopId } = req.params;
         const orders = await Order.find({ shop: shopId })
-            .populate('client')
+            .populate({
+                path: 'client',
+                populate: { path: 'user', select: 'name email' } // bringing name and email
+            })
             .sort({ createdAt: -1 })
             .exec();
         res.json(orders);

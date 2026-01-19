@@ -278,11 +278,11 @@ class _PagoPageState extends State<PagoPage> {
     try {
       await OrderRepository().createOrder(
         token: auth.token!,
-        clientId: auth.user!.id,
+        clientId: auth.user!.clientId ?? auth.user!.id,
         shopId: shopId,
         products: productsSnapshot,
         address: _addressCtrl.text,
-        paymentMethod: _paymentMethod,
+        paymentMethod: _paymentMethod == "Efectivo" ? "Cash" : "Card",
         totalPrice: carrito.total,
       );
 

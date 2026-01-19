@@ -5,6 +5,7 @@ class UserModel {
   final String username;
   final String email;
   final String userType;
+  final String? clientId; // Nullable if not a customer
 
   const UserModel({
     required this.id,
@@ -13,6 +14,7 @@ class UserModel {
     required this.username,
     required this.email,
     required this.userType,
+    this.clientId,
   });
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
@@ -23,6 +25,7 @@ class UserModel {
       username: map['username']?.toString() ?? '',
       email: map['email']?.toString() ?? '',
       userType: map['userType']?.toString() ?? '',
+      clientId: map['clientId']?.toString(),
     );
   }
 }

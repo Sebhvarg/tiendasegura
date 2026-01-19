@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 
+import 'api_config.dart';
+
 class OrderRepository {
-  final String baseUrl = "http://localhost:3000/api/orders";
+  String get baseUrl => "${ApiConfig.baseUrl}/api/orders";
 
   Future<void> createOrder({
     required String token,
@@ -45,6 +47,27 @@ class OrderRepository {
 
   Future<List<dynamic>> getOrdersByShop(String shopId, String token) async {
     final url = Uri.parse("$baseUrl/shop/$shopId");
+    try {
+      final response = await http.get(
+        url,
+        headers: {"Authorization": "Bearer $token"},
+      );
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception("Error fetching orders: ${response.body}");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error fetching orders: $e");
+      }
+      rethrow;
+    }
+  }
+
+  Future<List<dynamic>> getOrdersByClient(String clientId, String token) async {
+    final url = Uri.parse("$baseUrl/client/$clientId");
     try {
       final response = await http.get(
         url,

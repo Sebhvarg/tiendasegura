@@ -161,7 +161,19 @@ exports.login = async (req, res) => {
     }
 
     // Generar token
+    // Generar token
     const token = generateToken(user._id);
+
+    let clientId = null;
+    let shopOwnerId = null;
+
+    if (user.userType === 'customer') {
+        const client = await Client.findOne({ user: user._id });
+        if (client) clientId = client._id;
+    } else if (user.userType === 'shop_owner' || user.userType === 'seller') {
+        const owner = await ShopOwner.findOne({ user: user._id });
+        if (owner) shopOwnerId = owner._id;
+    }
 
     res.status(200).json({
       success: true,
@@ -173,7 +185,9 @@ exports.login = async (req, res) => {
         username: user.username,
         email: user.email,
         userType: user.userType,
-        token
+        token,
+        clientId,
+        shopOwnerId
       }
     });
 
@@ -193,10 +207,24 @@ exports.login = async (req, res) => {
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
+    let clientId = null;
+    let shopOwnerId = null;
+
+    if (user.userType === 'customer') {
+        const client = await Client.findOne({ user: user._id });
+        if (client) clientId = client._id;
+    } else if (user.userType === 'shop_owner' || user.userType === 'seller') {
+        const owner = await ShopOwner.findOne({ user: user._id });
+        if (owner) shopOwnerId = owner._id;
+    }
 
     res.status(200).json({
       success: true,
-      data: user
+      data: {
+        ...user.toObject(),
+        clientId,
+        shopOwnerId
+      }
     });
 
   } catch (error) {

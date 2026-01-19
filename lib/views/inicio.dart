@@ -7,6 +7,7 @@ import '../model/API/product_repository.dart';
 import '../model/API/shop_repository.dart';
 import '../model/producto.dart';
 import 'productos_tienda.dart';
+import 'pedidos_cliente.dart';
 
 class Inicio extends StatelessWidget {
   const Inicio({super.key});
@@ -309,6 +310,44 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
           IconButton(
             onPressed: () => Navigator.of(context).pushNamed('/carrito'),
             icon: const Icon(Icons.shopping_cart),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'orders') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PedidosClientePage()),
+                );
+              } else if (value == 'logout') {
+                widget.auth.logout();
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              return [
+                const PopupMenuItem(
+                  value: 'orders',
+                  child: Row(
+                    children: [
+                      Icon(Icons.receipt_long, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('Mis Pedidos'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'logout',
+                  child: Row(
+                    children: [
+                      Icon(Icons.logout, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text(
+                        'Cerrar Sesión',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
+            },
           ),
         ],
       ),

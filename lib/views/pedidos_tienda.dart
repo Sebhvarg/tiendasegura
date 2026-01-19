@@ -141,7 +141,7 @@ class _PedidosTiendaPageState extends State<PedidosTiendaPage>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Cliente: ${client != null ? client['name'] : 'Desconocido'}",
+                  "Cliente: ${client != null && client['user'] != null ? client['user']['name'] : 'Desconocido'}",
                 ),
                 Text("Dirección: $address"),
                 const Divider(),

@@ -8,6 +8,7 @@ import '../model/API/shop_repository.dart';
 import '../model/producto.dart';
 import 'productos_tienda.dart';
 import 'pedidos_cliente.dart';
+import 'detalle_producto.dart';
 
 class Inicio extends StatelessWidget {
   const Inicio({super.key});
@@ -295,6 +296,13 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
   final _productRepo = ProductRepository();
   final _shopRepo = ShopRepository();
   String _searchQuery = "";
+  Future<List<dynamic>>? _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _productsFuture = _productRepo.getAllProducts();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -487,7 +495,7 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
             const SizedBox(height: 10),
 
             FutureBuilder(
-              future: _productRepo.getAllProducts(),
+              future: _productsFuture ??= _productRepo.getAllProducts(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -497,13 +505,24 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
                     ),
                   );
                 }
+
+                if (snapshot.hasError) {
+                  debugPrint("Error fetching products: ${snapshot.error}");
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+
                 final allProducts = (snapshot.data as List<dynamic>?) ?? [];
+                debugPrint("All products fetched: ${allProducts.length}");
 
                 // Filter by search
                 final filtered = allProducts.where((p) {
                   final name = (p['name'] ?? '').toString().toLowerCase();
                   return name.contains(_searchQuery);
                 }).toList();
+
+                debugPrint(
+                  "Filtered products: ${filtered.length} (Query: '$_searchQuery')",
+                );
 
                 if (filtered.isEmpty) {
                   return const Center(
@@ -527,15 +546,28 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
                   ),
                   itemBuilder: (context, index) {
                     final p = filtered[index];
-                    // Only show products with valid shop reference
+                    // Handle shop reference safely
                     final shopRef = p["shop"];
                     final shopId = (shopRef is Map) ? shopRef["_id"] : shopRef;
+                    final shopName = (shopRef is Map)
+                        ? (shopRef["name"] ?? "Tienda")
+                        : "Tienda";
 
-                    if (shopId == null) return const SizedBox.shrink();
+                    // We display the product even if shop is missing, but disable "Add"
+                    final hasShop = shopId != null;
 
                     return GestureDetector(
                       onTap: () {
-                        // Optional: Handle tap to view details or go to shop
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProductDetailPage(
+                              productData: p,
+                              shopName: shopName,
+                              shopId: shopId ?? '',
+                            ),
+                          ),
+                        );
                       },
                       child: Container(
                         decoration: BoxDecoration(
@@ -617,7 +649,7 @@ class _CustomerDashboardState extends State<_CustomerDashboard> {
                                           precio: (p["price"] ?? 0).toDouble(),
                                           imagen: (p["imageUrl"] ?? "")
                                               .toString(),
-                                          shopId: shopId,
+                                          shopId: shopId ?? "",
                                         );
                                         context
                                             .read<CarritoViewModel>()

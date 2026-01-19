@@ -11,6 +11,7 @@ const userSchema = new Schema(
         phone: { type: String, required: true },
         password: { type: String, required: true, select: false }, // No mostrar password por defecto
         DateOfBirth: { type: Date, required: true },
+        cedulaPhotoUrl: { type: String, required: false },
         userType: { type: String, enum: ['admin', 'customer', 'seller', 'shop_owner'], required: true },
         createdAt: { type: Date, default: Date.now },
         updatedAt: { type: Date, default: Date.now },

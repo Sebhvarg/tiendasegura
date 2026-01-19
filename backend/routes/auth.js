@@ -1,5 +1,19 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+
+// Configuración de Multer
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 const {
   register,
   login,
@@ -10,7 +24,7 @@ const {
 const { protect } = require('../middleware/auth');
 
 // Rutas públicas
-router.post('/register', register);
+router.post('/register', upload.single('cedulaPhoto'), register);
 router.post('/login', login);
 
 // Rutas protegidas (requieren autenticación)

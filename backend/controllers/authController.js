@@ -29,6 +29,11 @@ exports.register = async (req, res) => {
       userType 
     } = req.body;
 
+    let cedulaPhotoUrl = '';
+    if (req.file) {
+      cedulaPhotoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
 
     if (!name || !lastName || !username || !email || !password || !userType) {
       return res.status(400).json({
@@ -60,8 +65,10 @@ exports.register = async (req, res) => {
       address,
       phone,
       password: hashedPassword,
+      password: hashedPassword,
       DateOfBirth,
-      userType
+      userType,
+      cedulaPhotoUrl
     });
 
     // Si es customer, crear Client y ShoppingCart vacío

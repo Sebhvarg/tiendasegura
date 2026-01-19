@@ -4,6 +4,9 @@ import '../ViewModel/auth_viewmodel.dart';
 import 'package:flutter/services.dart';
 import 'dart:math';
 
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -21,6 +24,21 @@ class _RegisterPageState extends State<RegisterPage> {
   final _addressCtrl = TextEditingController();
   final _date_of_birthCtrl = TextEditingController();
   String? _selectedUserType;
+  File? _imageFile;
+  final _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(source: source);
+      if (picked != null) {
+        setState(() {
+          _imageFile = File(picked.path);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking image: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -62,6 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ? null
           : _date_of_birthCtrl.text.trim(),
       userType: _selectedUserType!,
+      imageFile: _imageFile,
     );
     if (!mounted) return;
     if (ok) {
@@ -167,7 +186,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 decoration: const InputDecoration(labelText: 'Teléfono'),
                 validator: (v) {
                   if (v == null || v.isEmpty) return 'Requerido';
-                  if (!RegExp(r'^\d{10}$').hasMatch(v)) {
+                  if (!RegExp(r'^09\d{8}$').hasMatch(v)) {
                     return 'Ingrese un teléfono válido';
                   }
                   return null;
@@ -242,6 +261,38 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
               ),
+              const SizedBox(height: 20),
+
+              // Sección de Foto de Cédula
+              const Text(
+                'Foto de la Cédula (Obligatorio para verificar)',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.camera),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Cámara'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _pickImage(ImageSource.gallery),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Galería'),
+                    ),
+                  ),
+                ],
+              ),
+              if (_imageFile != null) ...[
+                const SizedBox(height: 10),
+                Image.file(_imageFile!, height: 200, fit: BoxFit.cover),
+              ],
+
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _submit,

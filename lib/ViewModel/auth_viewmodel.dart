@@ -81,6 +81,7 @@ class AuthViewModel extends ChangeNotifier {
     String? phone,
     String? dateOfBirth,
     String userType = 'customer',
+    dynamic imageFile, // File? from dart:io
   }) async {
     _loading = true;
     _error = null;
@@ -96,6 +97,7 @@ class AuthViewModel extends ChangeNotifier {
         phone: phone,
         dateOfBirth: dateOfBirth,
         userType: userType,
+        imageFile: imageFile,
       );
       if (res.success && res.data != null) {
         _auth = res.data;

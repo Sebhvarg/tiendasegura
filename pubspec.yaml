@@ -37,6 +37,7 @@ dependencies:
   
   # HTTP client para comunicarse con el backend
   http: ^1.1.0
+  image_picker: ^1.0.4
   
   # Shared preferences para almacenar datos localmente
   shared_preferences: ^2.2.2

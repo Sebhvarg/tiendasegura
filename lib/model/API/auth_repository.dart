@@ -1,10 +1,9 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../auth_models.dart';
 import 'api_config.dart';
-
 
 class AuthRepository {
   final http.Client _client;
@@ -36,24 +35,34 @@ class AuthRepository {
     String? phone,
     String? dateOfBirth,
     String userType = 'customer',
+    File? imageFile,
   }) async {
-    final body = {
-      'name': name,
-      'lastName': lastName,
-      'username': username,
-      'email': email,
-      'password': password,
-      'address': address,
-      'phone': phone,
-      'DateOfBirth': dateOfBirth,
-      'userType': userType,
-    }..removeWhere((key, value) => value == null);
+    final request = http.MultipartRequest('POST', _url('/api/auth/register'));
 
-    final response = await _client.post(
-      _url('/api/auth/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
+    // Campos de texto
+    request.fields['name'] = name;
+    request.fields['lastName'] = lastName;
+    request.fields['username'] = username;
+    request.fields['email'] = email;
+    request.fields['password'] = password;
+    request.fields['userType'] = userType;
+    if (address != null) request.fields['address'] = address;
+    if (phone != null) request.fields['phone'] = phone;
+    if (dateOfBirth != null) request.fields['DateOfBirth'] = dateOfBirth;
+
+    // Archivo
+    if (imageFile != null) {
+      if (kIsWeb) {
+        // Lógica para web sies necesaria (no implementada aquí para File dart:io)
+      } else {
+        request.files.add(
+          await http.MultipartFile.fromPath('cedulaPhoto', imageFile.path),
+        );
+      }
+    }
+
+    final streamlinedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamlinedResponse);
 
     final map = jsonDecode(response.body) as Map<String, dynamic>;
     return AuthResponse.fromMap(map);

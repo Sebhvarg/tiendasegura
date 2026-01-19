@@ -92,10 +92,35 @@ async function getProduct(req, res, next) {
 }
 async function getListProducts(req, res, next) {
     try {
-    const list = await Product.find().populate('shop').exec();
-    res.json(list);
+        let products = await Product.find().populate('shop').lean();
+
+        // Fix for missing shops:
+        // Iterate over products, if shop is missing, try to find the catalog that contains it.
+        const productsWithoutShop = products.filter(p => !p.shop);
+        
+        if (productsWithoutShop.length > 0) {
+            console.log(`Found ${productsWithoutShop.length} products without shop. Attempting to recover...`);
+            
+            // We need to look up catalogs to find which shop owns these products
+            // Optimization: Find all catalogs once? Or per product?
+            // Let's iterate and update.
+            for (let product of productsWithoutShop) {
+                // Find catalog containing this product
+                const catalog = await Catalog.findOne({ products: product._id }).populate('shop');
+                
+                if (catalog && catalog.shop) {
+                    product.shop = catalog.shop;
+                    console.log(`Recovered shop for product ${product.name}: ${catalog.shop.name}`);
+                    
+                    // Optional: Persist this fix to DB so we don't do it every time
+                    // await Product.findByIdAndUpdate(product._id, { shop: catalog.shop._id });
+                }
+            }
+        }
+
+        res.json(products);
     } catch (err) {
-      next(err);
+        next(err);
     }
 }
 

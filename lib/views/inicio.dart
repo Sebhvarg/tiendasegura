@@ -7,6 +7,7 @@ import '../model/API/product_repository.dart';
 import '../model/API/shop_repository.dart';
 import '../model/producto.dart';
 import 'productos_tienda.dart';
+import 'pedidos_tienda.dart';
 import 'pedidos_cliente.dart';
 import 'detalle_producto.dart';
 
@@ -196,26 +197,55 @@ class _SellerDashboard extends StatelessWidget {
     if (!auth.hasShop) {
       return const _RegisterShopForm();
     }
+
+    // Assuming the user has at least one shop
+    // If not, we should probably show a loader or error, but hasShop handles basic check.
+    // Ideally we should select which shop to manage if multiple.
+    final shopId = auth.shops.isNotEmpty ? auth.shops[0]['_id'] : null;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Panel de Vendedor')),
-      body: Center(
+      appBar: AppBar(
+        title: const Text('Panel de Vendedor'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => auth.logout(),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Welcome Section
             Text(
               'Hola, ${auth.user?.name ?? 'Vendedor'}',
-              style: Theme.of(context).textTheme.headlineSmall,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              auth.shops.isNotEmpty
+                  ? (auth.shops[0]['name'] ?? 'Mi Tienda')
+                  : 'Mi Tienda',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
 
-            // Botón de Pánico
+            // Panic Button
             SizedBox(
-              width: 300,
-              height: 70,
+              width: double.infinity,
+              height: 60,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: Colors.red[700],
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 onPressed: () {
                   showDialog(
@@ -232,54 +262,120 @@ class _SellerDashboard extends StatelessWidget {
                     ),
                   );
                 },
-                icon: const Icon(Icons.warning_amber_rounded, size: 30),
+                icon: const Icon(Icons.warning_amber_rounded, size: 32),
                 label: const Text(
                   'BOTÓN DE PÁNICO 911',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/registrar-producto');
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Registrar nuevo producto'),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Función de Pedidos próximamente'),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.receipt_long),
-              label: const Text('Gestionar Pedidos'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/catalogo');
-              },
-              icon: const Icon(Icons.list),
-              label: const Text('Ver mis productos'),
-            ),
             const SizedBox(height: 32),
-            TextButton(
-              onPressed: () => auth.logout(),
-              child: const Text(
-                'Cerrar sesión',
-                style: TextStyle(color: Colors.red),
-              ),
+
+            // Dashboard Grid
+            GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _DashboardCard(
+                  icon: Icons.add_circle_outline,
+                  title: 'Nuevo Producto',
+                  color: Colors.blue,
+                  onTap: () {
+                    Navigator.of(context).pushNamed('/registrar-producto');
+                  },
+                ),
+                _DashboardCard(
+                  icon: Icons.receipt_long,
+                  title: 'Pedidos',
+                  color: Colors.orange,
+                  onTap: () {
+                    if (shopId != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              PedidosTiendaPage(shopId: shopId),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error: No se encontró ID de tienda'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+                _DashboardCard(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Mi Catálogo',
+                  color: Colors.green,
+                  onTap: () {
+                    Navigator.of(context).pushNamed('/catalogo');
+                  },
+                ),
+                _DashboardCard(
+                  icon: Icons.storefront,
+                  title: 'Configurar Tienda',
+                  color: Colors.purple,
+                  onTap: () {
+                    // TODO: Navigate to Shop Settings
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Próximamente')),
+                    );
+                  },
+                ),
+              ],
             ),
           ],
         ),
       ),
       bottomNavigationBar: const _Footer(),
+    );
+  }
+}
+
+class _DashboardCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _DashboardCard({
+    required this.icon,
+    required this.title,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: color.withOpacity(0.1),
+              child: Icon(icon, size: 32, color: color),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

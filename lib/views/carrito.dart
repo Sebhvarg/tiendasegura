@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../ViewModel/carrito_viewmodel.dart';
+import 'pago.dart';
 
 class CarritoPage extends StatelessWidget {
   final String shopName;
 
-  const CarritoPage({
-    super.key,
-    this.shopName = "Mi carrito",
-  });
+  const CarritoPage({super.key, this.shopName = "Mi carrito"});
 
   @override
   Widget build(BuildContext context) {
@@ -49,26 +47,27 @@ class CarritoPage extends StatelessWidget {
                       final totalProducto = precioUnit * cantidad;
 
                       return Container(
-                        margin: const EdgeInsets.only(bottom: 14),
+                        margin: const EdgeInsets.only(bottom: 16),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              blurRadius: 12,
-                              offset: Offset(0, 4),
-                              color: Colors.black12,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                              color: Colors.black.withOpacity(0.05),
                             ),
                           ],
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // ✅ IMAGEN (lado izquierdo)
                             Container(
-                              width: 135,
+                              width: 100,
                               height: 120,
                               decoration: BoxDecoration(
-                                color: Colors.grey.shade200,
+                                color: Colors.grey.shade100,
                                 borderRadius: const BorderRadius.only(
                                   topLeft: Radius.circular(20),
                                   bottomLeft: Radius.circular(20),
@@ -83,154 +82,144 @@ class CarritoPage extends StatelessWidget {
                                     ? Image.network(
                                         item.producto.imagen,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) {
-                                          return const Center(
-                                            child: Icon(
-                                              Icons.image_not_supported,
-                                              size: 35,
+                                        errorBuilder: (_, __, ___) =>
+                                            const Center(
+                                              child: Icon(
+                                                Icons.image_not_supported,
+                                                size: 30,
+                                              ),
                                             ),
-                                          );
-                                        },
                                       )
                                     : Image.asset(
                                         item.producto.imagen,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) {
-                                          return const Center(
-                                            child: Icon(
-                                              Icons.image_not_supported,
-                                              size: 35,
+                                        errorBuilder: (_, __, ___) =>
+                                            const Center(
+                                              child: Icon(
+                                                Icons.image_not_supported,
+                                                size: 30,
+                                              ),
                                             ),
-                                          );
-                                        },
                                       ),
                               ),
                             ),
 
-                            // ✅ INFORMACIÓN (centro)
+                            // ✅ INFORMACIÓN + CONTROLES (Columna Derecha)
                             Expanded(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 14,
-                                ),
+                                padding: const EdgeInsets.all(12),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      nombre,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    // Fila Superior: Nombre + Borrar
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            nombre,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              height: 1.2,
+                                            ),
+                                          ),
+                                        ),
+                                        InkWell(
+                                          onTap: () {
+                                            carrito.removerItem(index);
+                                          },
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                          child: const Padding(
+                                            padding: EdgeInsets.all(4.0),
+                                            child: Icon(
+                                              Icons.delete_outline,
+                                              color: Colors.redAccent,
+                                              size: 22,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
 
-                                    const SizedBox(height: 8),
-
+                                    const SizedBox(height: 4),
                                     Text(
-                                      "Precio unitario: \$${precioUnit.toStringAsFixed(2)}",
+                                      "\$${precioUnit.toStringAsFixed(2)}",
                                       style: TextStyle(
-                                        color: Colors.grey.shade700,
-                                        fontSize: 14,
+                                        color: Colors.grey.shade600,
+                                        fontSize: 13,
                                       ),
                                     ),
+                                    const SizedBox(height: 12),
 
-                                    const SizedBox(height: 6),
+                                    // Fila Inferior: Total + Controles Cantidad
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "\$${totalProducto.toStringAsFixed(2)}",
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFF025E73),
+                                          ),
+                                        ),
 
-                                    Text(
-                                      "Total producto: \$${totalProducto.toStringAsFixed(2)}",
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                      ),
+                                        // Controles Cantidad Compactos
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF025E73,
+                                            ).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              _qtyBtn(
+                                                icon: Icons.remove,
+                                                onTap: () {
+                                                  carrito.decrementarCantidad(
+                                                    index,
+                                                  );
+                                                },
+                                              ),
+                                              Container(
+                                                width: 32,
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  "$cantidad",
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Color(0xFF025E73),
+                                                  ),
+                                                ),
+                                              ),
+                                              _qtyBtn(
+                                                icon: Icons.add,
+                                                onTap: () {
+                                                  carrito.incrementarCantidad(
+                                                    index,
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-
-                            // ✅ CONTROLES (lado derecho)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                right: 14,
-                                top: 14,
-                                bottom: 14,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  // fila de cantidad + botones
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        "Cantidad:",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-
-                                      _iconBtn(
-                                        icon: Icons.remove,
-                                        onTap: () {
-                                          if (item.cantidad > 1) {
-                                            item.cantidad--;
-                                          } else {
-                                            carrito.items.removeAt(index);
-                                          }
-                                          carrito.notifyListeners();
-                                        },
-                                      ),
-
-                                      const SizedBox(width: 8),
-
-                                      Container(
-                                        width: 32,
-                                        height: 32,
-                                        alignment: Alignment.center,
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          border: Border.all(
-                                            color: const Color(0xFF025E73),
-                                            width: 1.5,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "$cantidad",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-
-                                      const SizedBox(width: 8),
-
-                                      _iconBtn(
-                                        icon: Icons.add,
-                                        onTap: () {
-                                          item.cantidad++;
-                                          carrito.notifyListeners();
-                                        },
-                                      ),
-
-                                      const SizedBox(width: 10),
-
-                                      // 🗑 eliminar
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline),
-                                        onPressed: () {
-                                          carrito.items.removeAt(index);
-                                          carrito.notifyListeners();
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
                               ),
                             ),
                           ],
@@ -241,32 +230,77 @@ class CarritoPage extends StatelessWidget {
                 ),
 
                 // ✅ TOTAL A PAGAR (abajo)
-                Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Container(
-                    height: 70,
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF025E73),
-                      borderRadius: BorderRadius.circular(18),
+                // ✅ TOTAL A PAGAR (abajo)
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, -5),
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          "Total a pagar:",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Total a pagar:",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              "\$${carrito.total.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF025E73),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          "\$${carrito.total.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (carrito.items.isEmpty) return;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const PagoPage(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF025E73),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: const Text(
+                              "Proceder al Pago",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -279,17 +313,13 @@ class CarritoPage extends StatelessWidget {
   }
 
   // ✅ Botón redondito como en la imagen
-  static Widget _iconBtn({required IconData icon, required VoidCallback onTap}) {
+  Widget _qtyBtn({required IconData icon, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: const Color(0xFF025E73),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(icon, size: 18, color: Colors.white),
+        padding: const EdgeInsets.all(6),
+        child: Icon(icon, size: 18, color: const Color(0xFF025E73)),
       ),
     );
   }

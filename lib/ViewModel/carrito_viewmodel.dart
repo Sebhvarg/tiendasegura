@@ -37,4 +37,29 @@ class CarritoViewModel extends ChangeNotifier {
     }
     return suma;
   }
+
+  void incrementarCantidad(int index) {
+    if (index >= 0 && index < _items.length) {
+      _items[index].cantidad++;
+      notifyListeners();
+    }
+  }
+
+  void decrementarCantidad(int index) {
+    if (index >= 0 && index < _items.length) {
+      if (_items[index].cantidad > 1) {
+        _items[index].cantidad--;
+        notifyListeners();
+      } else {
+        removerItem(index);
+      }
+    }
+  }
+
+  void removerItem(int index) {
+    if (index >= 0 && index < _items.length) {
+      _items.removeAt(index);
+      notifyListeners();
+    }
+  }
 }

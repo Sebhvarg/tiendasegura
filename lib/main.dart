@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         ],
         supportedLocales: const [Locale('es', ''), Locale('en', '')],
 
-        initialRoute: '/home',
+        initialRoute: '/tiendas',
 
         routes: {
           '/login': (_) => const LoginPage(),

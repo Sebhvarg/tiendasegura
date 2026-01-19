@@ -3,9 +3,14 @@ const router = express.Router();
 const controller = require('../controllers/productController');
 
 
+const { protect } = require('../middleware/auth');
+
 // Public: list & get
 router.get('/', controller.getListProducts);
-router.post('/create', controller.createProduct);
+router.post('/create', protect, controller.createProduct);
+router.post('/search-image', controller.searchImage);
+router.delete('/:id', protect, controller.deleteProduct);
+router.put('/:id', protect, controller.updateProduct);
 // Agregar al catálogo
 router.post('/:catalogId/add-to-catalog/:productId', controller.addToCatalog);
 

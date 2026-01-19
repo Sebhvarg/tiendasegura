@@ -4,6 +4,8 @@ import '../model/producto.dart';
 import '../ViewModel/carrito_viewmodel.dart';
 import '../ViewModel/auth_viewmodel.dart';
 import '../model/API/shop_repository.dart';
+import '../model/API/product_repository.dart';
+import 'registrar_producto.dart';
 
 class CatalogoPage extends StatefulWidget {
   const CatalogoPage({super.key});
@@ -137,6 +139,11 @@ class _CatalogoPageState extends State<CatalogoPage> {
               padding: const EdgeInsets.all(12.0),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
                   Image.asset(
                     'lib/assets/imgs/logo/isologo.webp', // tu logo
                     width: 25,
@@ -289,6 +296,68 @@ class _CatalogoPageState extends State<CatalogoPage> {
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 6),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // Edit Button
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    RegistrarProductoPage(producto: producto),
+                              ),
+                            ).then((_) => _loadProducts());
+                          },
+                        ),
+                        // Delete Button
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Confirmar eliminar'),
+                                content: Text(
+                                  '¿Estás seguro de eliminar "${producto.nombre}"?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (confirm == true && mounted) {
+                              try {
+                                final auth = context.read<AuthViewModel>();
+                                if (auth.token == null) return;
+
+                                await ProductRepository().deleteProduct(
+                                  token: auth.token!,
+                                  id: producto.id,
+                                );
+
+                                _loadProducts(); // Refresh
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),

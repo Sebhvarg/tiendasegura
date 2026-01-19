@@ -8,7 +8,18 @@ const { Schema, model, Types } = mongoose;
 const orderSchema = new Schema(
     {
         client: { type: Types.ObjectId, ref: 'Client', required: true },
-        shoppingCart: { type: Types.ObjectId, ref: 'ShoppingCart', required: true },
+        shop: { type: Types.ObjectId, ref: 'Shop', required: true },
+        products: [
+            {
+                product: { type: Types.ObjectId, ref: 'Product' },
+                name: String,
+                price: Number,
+                quantity: Number,
+                image: String
+            }
+        ],
+        address: { type: String, required: true },
+        paymentMethod: { type: String, enum: ['Cash', 'Card'], required: true },
         totalPrice: { type: Number, min: 0.05 },
         status: { type: String, enum: Object.values(OrderStatus), default: OrderStatus.PENDING },
     },

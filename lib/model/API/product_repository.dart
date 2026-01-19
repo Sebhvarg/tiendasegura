@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
@@ -131,6 +130,16 @@ class ProductRepository {
 
     if (response.statusCode != 200) {
       throw Exception('Error al actualizar producto');
+    }
+  }
+
+  Future<List<dynamic>> getAllProducts() async {
+    final response = await _client.get(_url('/api/products/'));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else {
+      throw Exception('Error al cargar productos');
     }
   }
 }

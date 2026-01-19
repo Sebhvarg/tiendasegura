@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../ViewModel/auth_viewmodel.dart';
+import '../ViewModel/carrito_viewmodel.dart';
+import '../model/API/product_repository.dart';
+import '../model/API/shop_repository.dart';
+import '../model/producto.dart';
+import 'productos_tienda.dart';
 
 class Inicio extends StatelessWidget {
   const Inicio({super.key});
@@ -277,48 +282,338 @@ class _SellerDashboard extends StatelessWidget {
   }
 }
 
-class _CustomerDashboard extends StatelessWidget {
+class _CustomerDashboard extends StatefulWidget {
   final AuthViewModel auth;
   const _CustomerDashboard({required this.auth});
 
   @override
+  State<_CustomerDashboard> createState() => _CustomerDashboardState();
+}
+
+class _CustomerDashboardState extends State<_CustomerDashboard> {
+  final _productRepo = ProductRepository();
+  final _shopRepo = ShopRepository();
+  String _searchQuery = "";
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Panel de Cliente')),
-      body: Center(
+      backgroundColor: const Color(0xFFF3F6F8),
+      appBar: AppBar(
+        title: Text(
+          'Hola, ${widget.auth.user?.name ?? 'Cliente'}',
+          style: const TextStyle(fontSize: 18),
+        ),
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () => Navigator.of(context).pushNamed('/carrito'),
+            icon: const Icon(Icons.shopping_cart),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Hola, ${auth.user?.name ?? 'Cliente'}',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 24),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/catalogo');
-              },
-              icon: const Icon(Icons.shopping_bag),
-              label: const Text('Ver Catálogo'),
-            ),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).pushNamed('/carrito');
-              },
-              icon: const Icon(Icons.shopping_cart),
-              label: const Text('Mi Carrito'),
-            ),
-
-            const SizedBox(height: 32),
-            TextButton(
-              onPressed: () => auth.logout(),
-              child: const Text(
-                'Cerrar sesión',
-                style: TextStyle(color: Colors.red),
+            // 🔹 Search Bar
+            Container(
+              padding: const EdgeInsets.all(16.0),
+              color: Colors.white,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: '¿Qué estás buscando hoy?',
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Color(0xFF025E73),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF3F6F8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 0,
+                    horizontal: 16,
+                  ),
+                ),
+                onChanged: (val) =>
+                    setState(() => _searchQuery = val.toLowerCase()),
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            // 🔹 Shops Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: const Text(
+                "Tiendas Cercanas",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              height: 140, // Height for shop cards
+              child: FutureBuilder(
+                future: _shopRepo.getShops(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final shops = snapshot.data ?? [];
+                  if (shops.isEmpty) {
+                    return const Center(
+                      child: Text("No hay tiendas disponibles"),
+                    );
+                  }
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: shops.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    itemBuilder: (context, index) {
+                      final shop = shops[index];
+                      return Container(
+                        width: 120, // Card width
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!mounted) return;
+                            context.read<CarritoViewModel>().limpiar();
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProductosTiendaPage(
+                                  shopId: shop["_id"],
+                                  shopName: shop["name"] ?? "Tienda",
+                                ),
+                              ),
+                            );
+                          },
+                          child: Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundColor: Theme.of(
+                                      context,
+                                    ).primaryColorLight,
+                                    child: const Icon(
+                                      Icons.store,
+                                      size: 30,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    shop["name"] ?? "Tienda",
+                                    maxLines: 2,
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 🔹 Suggestions Section
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: const Text(
+                "Sugerencias para ti",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            FutureBuilder(
+              future: _productRepo.getAllProducts(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+                final allProducts = (snapshot.data as List<dynamic>?) ?? [];
+
+                // Filter by search
+                final filtered = allProducts.where((p) {
+                  final name = (p['name'] ?? '').toString().toLowerCase();
+                  return name.contains(_searchQuery);
+                }).toList();
+
+                if (filtered.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20.0),
+                      child: Text("No se encontraron productos"),
+                    ),
+                  );
+                }
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(14),
+                  itemCount: filtered.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 14,
+                    mainAxisSpacing: 14,
+                    childAspectRatio: 0.75,
+                  ),
+                  itemBuilder: (context, index) {
+                    final p = filtered[index];
+                    // Only show products with valid shop reference
+                    final shopRef = p["shop"];
+                    final shopId = (shopRef is Map) ? shopRef["_id"] : shopRef;
+
+                    if (shopId == null) return const SizedBox.shrink();
+
+                    return GestureDetector(
+                      onTap: () {
+                        // Optional: Handle tap to view details or go to shop
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              blurRadius: 5,
+                              color: Colors.black12,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(16),
+                                ),
+                                child:
+                                    (p["imageUrl"] ?? "").toString().startsWith(
+                                      "http",
+                                    )
+                                    ? Image.network(
+                                        p["imageUrl"],
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) =>
+                                            const Icon(
+                                              Icons.image_not_supported,
+                                            ),
+                                      )
+                                    : const Center(
+                                        child: Icon(
+                                          Icons.shopping_bag,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    p["name"] ?? "Producto",
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    "\$${(p["price"] ?? 0)}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // Add to Cart Button
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 30,
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        padding: EdgeInsets.zero,
+                                        backgroundColor: Theme.of(
+                                          context,
+                                        ).primaryColor,
+                                      ),
+                                      onPressed: () {
+                                        final productObj = Producto(
+                                          id: p["_id"],
+                                          nombre: p["name"] ?? "",
+                                          precio: (p["price"] ?? 0).toDouble(),
+                                          imagen: (p["imageUrl"] ?? "")
+                                              .toString(),
+                                          shopId: shopId,
+                                        );
+                                        context
+                                            .read<CarritoViewModel>()
+                                            .agregarProducto(productObj);
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              '${p["name"]} agregado',
+                                            ),
+                                            duration: const Duration(
+                                              seconds: 1,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Text(
+                                        "Agregar",
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            const SizedBox(height: 80), // Space for footer/fab
           ],
         ),
       ),

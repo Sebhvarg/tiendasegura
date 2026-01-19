@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Order = require('../models/order');
 const ShoppingCart = require('../models/shopping_cart');
 const Client = require('../models/client');
+const OrderStatus = require('../enum/orderStatus');
 
 async function getAllOrders(req, res, next) {
     try {
@@ -45,24 +46,26 @@ function normalizeId(value) {
 async function createOrder(req, res, next) {
     try {
         const clientId = normalizeId(req.body.clientId);
-        const shoppingCartId = normalizeId(req.body.shoppingCartId);
+        const shopId = normalizeId(req.body.shopId);
+        const { products, address, paymentMethod, totalPrice } = req.body;
 
-        if (!clientId || !mongoose.Types.ObjectId.isValid(clientId)) {
-            return res.status(400).json({ error: 'Invalid clientId' });
-        }
-        if (!shoppingCartId || !mongoose.Types.ObjectId.isValid(shoppingCartId)) {
-            return res.status(400).json({ error: 'Invalid shoppingCartId' });
+        if (!clientId || !shopId) {
+            return res.status(400).json({ error: 'Missing clientId or shopId' });
         }
 
         const client = await Client.findById(clientId);
         if (!client) return res.status(404).json({ error: 'Client not found' });
 
-        const shoppingCart = await ShoppingCart.findById(shoppingCartId);
-        if (!shoppingCart) return res.status(404).json({ error: 'Shopping Cart not found' });
         const order = new Order({
             client: client._id,
-            shoppingCart: shoppingCart._id,
+            shop: shopId,
+            products: products,
+            address: address,
+            paymentMethod: paymentMethod,
+            totalPrice: totalPrice,
+            status: OrderStatus.PENDING
         });
+
         await order.save();
         res.status(201).json(order);
     } catch (err) {
@@ -70,7 +73,34 @@ async function createOrder(req, res, next) {
     }
 };
 
-// get order by client id (optional)
+async function getOrdersByShop(req, res, next) {
+    try {
+        const { shopId } = req.params;
+        const orders = await Order.find({ shop: shopId })
+            .populate('client')
+            .sort({ createdAt: -1 })
+            .exec();
+        res.json(orders);
+    } catch (err) {
+        next(err);
+    }
+};
+
+async function updateOrderStatus(req, res, next) {
+    try {
+        const { orderId } = req.params;
+        const { status } = req.body;
+
+        const order = await Order.findById(orderId);
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+
+        order.status = status;
+        await order.save();
+        res.json(order);
+    } catch (err) {
+        next(err);
+    }
+};
 
 async function getOrdersByClient(req, res, next) {
     try {
@@ -85,6 +115,8 @@ async function getOrdersByClient(req, res, next) {
 module.exports = {
   createOrder,
   getOrdersByClient,
-    getAllOrders,
+  getOrdersByShop,
+  updateOrderStatus,
+  getAllOrders,
 };
 

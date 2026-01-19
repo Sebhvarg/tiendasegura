@@ -164,6 +164,7 @@ class _ProductosTiendaPageState extends State<ProductosTiendaPage> {
                       nombre: (p["name"] ?? "Sin nombre").toString(),
                       precio: (p["price"] ?? 0).toDouble(),
                       imagen: (p["imageUrl"] ?? "").toString(),
+                      shopId: widget.shopId,
                     );
 
                     return Container(

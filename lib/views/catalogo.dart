@@ -6,6 +6,7 @@ import '../ViewModel/auth_viewmodel.dart';
 import '../model/API/shop_repository.dart';
 import '../model/API/product_repository.dart';
 import 'registrar_producto.dart';
+import 'pedidos_tienda.dart';
 
 class CatalogoPage extends StatefulWidget {
   const CatalogoPage({super.key});
@@ -79,6 +80,7 @@ class _CatalogoPageState extends State<CatalogoPage> {
           nombre: (p["name"] ?? "Sin nombre").toString(),
           precio: (p["price"] ?? 0).toDouble(),
           imagen: (p["imageUrl"] ?? "").toString(),
+          shopId: shopId,
         );
       }).toList();
 
@@ -159,6 +161,22 @@ class _CatalogoPageState extends State<CatalogoPage> {
                     ),
                   ),
                   const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.list_alt),
+                    tooltip: 'Ver Pedidos',
+                    onPressed: () {
+                      if (auth.shops.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PedidosTiendaPage(
+                              shopId: auth.shops.first['_id'],
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
                   IconButton(
                     icon: const Icon(Icons.add_box),
                     onPressed: () {

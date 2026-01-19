@@ -13,6 +13,7 @@ const productSchema = new Schema(
         stock: { type: Number, default: 0, min: 0 },
         imageUrl: { type: String, default: null },
         isActive: { type: Boolean, default: true },
+        shop: { type: Schema.Types.ObjectId, ref: 'Shop' },
     },
     { timestamps: true }
 );

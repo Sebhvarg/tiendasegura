@@ -65,6 +65,11 @@ async function createProduct(req, res, next) {
     catalog.products.push(newProduct._id);
     await catalog.save({ session });
 
+    // Explicitly set shop if not in payload (it shouldn't be valid in payload from client usually)
+    // We already have 'shop' object from earlier
+    newProduct.shop = shop._id;
+    await newProduct.save({ session });
+
     await session.commitTransaction();
     session.endSession();
 
@@ -78,7 +83,7 @@ async function createProduct(req, res, next) {
 async function getProduct(req, res, next) {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id).exec();
+    const product = await Product.findById(id).populate('shop').exec();
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json(product);
   } catch (err) {
@@ -87,7 +92,7 @@ async function getProduct(req, res, next) {
 }
 async function getListProducts(req, res, next) {
     try {
-    const list = await Product.find().exec();
+    const list = await Product.find().populate('shop').exec();
     res.json(list);
     } catch (err) {
       next(err);

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../ViewModel/carrito_viewmodel.dart';
+import '../ViewModel/auth_viewmodel.dart';
+import '../model/API/order_repository.dart';
 
 class PagoPage extends StatefulWidget {
   const PagoPage({super.key});
@@ -229,43 +231,104 @@ class _PagoPageState extends State<PagoPage> {
     );
   }
 
-  void _confirmarPedido(BuildContext context, CarritoViewModel carrito) {
-    // Aquí iría la llamada al backend para crear la orden
+  Future<void> _confirmarPedido(
+    BuildContext context,
+    CarritoViewModel carrito,
+  ) async {
+    final auth = context.read<AuthViewModel>();
 
-    // Simulación de éxito
+    if (!auth.isAuthenticated || auth.user == null || auth.user!.id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Error: Usuario no identificado. Por favor inicie sesión nuevamente.",
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (carrito.items.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("El carrito está vacío.")));
+      return;
+    }
+
+    // Assume all items are from the same shop for now, or take the shop of the first item
+    final shopId = carrito.items.first.producto.shopId;
+
+    // Prepare products snapshot
+    final productsSnapshot = carrito.items.map((item) {
+      return {
+        "product": item.producto.id,
+        "name": item.producto.nombre,
+        "price": item.producto.precio,
+        "quantity": item.cantidad,
+        "image": item.producto.imagen,
+      };
+    }).toList();
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Column(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 60),
-            SizedBox(height: 10),
-            Text("¡Pedido Exitoso!"),
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      await OrderRepository().createOrder(
+        token: auth.token!,
+        clientId: auth.user!.id,
+        shopId: shopId,
+        products: productsSnapshot,
+        address: _addressCtrl.text,
+        paymentMethod: _paymentMethod,
+        totalPrice: carrito.total,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+
+      // Success Dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Column(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 60),
+              SizedBox(height: 10),
+              Text("¡Pedido Exitoso!"),
+            ],
+          ),
+          content: const Text(
+            "Tu pedido ha sido registrado y será enviado a la dirección proporcionada.",
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  carrito.limpiar(); // Clear cart
+                  Navigator.of(context).pop(); // Close Dialog
+                  Navigator.of(context).pop(); // Back to Carrito
+                  Navigator.of(context).pop(); // Back to Shop
+                },
+                child: const Text("Entendido"),
+              ),
+            ),
           ],
         ),
-        content: const Text(
-          "Tu pedido ha sido registrado y será enviado a la dirección proporcionada.",
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          Center(
-            child: ElevatedButton(
-              onPressed: () {
-                carrito.limpiar(); // Limpiar carrito
-                Navigator.of(context).pop(); // Cerrar Dialog
-                Navigator.of(
-                  context,
-                ).pop(); // Volver al carrito (que ahora estará vacío)
-                Navigator.of(context).pop(); // O volver a la tienda directly
-                // O mejor: Navigator.popUntil(context, ModalRoute.withName('/home'));
-              },
-              child: const Text("Entendido"),
-            ),
-          ),
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error al crear pedido: $e")));
+    }
   }
 }
